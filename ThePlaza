@@ -1,0 +1,247 @@
+local Main = {}
+
+local function FastSpawn(Function, ...)
+	assert(type(Function) == "function")
+
+	local Arguments = {...}
+	local Count = select("#", ...)
+
+	local Bindable = Instance.new("BindableEvent")
+	Bindable.Event:Connect(function()
+		Function(unpack(Arguments, 1, Count))
+	end)
+
+	Bindable:Fire()
+	Bindable:Destroy()
+end
+
+Main["Pets"] = {}
+Main["Items"] = {}
+Main["Colors"] = {}
+Main["Materials"] = {}
+Main["Vehicles"] = {}
+for i,v in pairs(game:GetService("ReplicatedStorage").ServerStats.Pets:GetChildren()) do
+	table.insert(Main["Pets"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").AptStats.Items:GetChildren()) do
+	table.insert(Main["Items"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").AptStats.Colors:GetChildren()) do
+	table.insert(Main["Colors"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").AptStats.Materials:GetChildren()) do
+	table.insert(Main["Materials"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").ServerStats.Vehicles:GetChildren()) do
+	table.insert(Main["Vehicles"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").ServerStats.Aircraft:GetChildren()) do
+	table.insert(Main["Vehicles"], v.Name)
+end
+for i,v in pairs(game:GetService("ReplicatedStorage").ServerStats.Boats:GetChildren()) do
+	table.insert(Main["Vehicles"], v.Name)
+end
+
+local function GetItem(Item)
+	if table.find(Main["Items"], Item) then
+		game:GetService("ReplicatedStorage").AptStats.Remotes.BuyItem:FireServer(Item)
+		return true
+	else
+		return false
+	end
+end
+
+local function GetPet(Pet)
+	if table.find(Main["Pets"], Pet) then
+		game:GetService("ReplicatedStorage").ServerStats.BuyPet:FireServer(Pet)
+		return true
+	else 
+		return false
+	end
+end
+
+local function GetColor(Color)
+	if table.find(Main["Colors"], Color) then
+		game:GetService("ReplicatedStorage").AptStats.Remotes.BuyColor:FireServer(Color)
+		return true
+	else
+		return false
+	end
+end
+
+local function GetMaterial(Material)
+	if table.find(Main["Materials"], Material) then
+		game:GetService("ReplicatedStorage").AptStats.Remotes.BuyMaterial:FireServer(Material)
+		return true
+	else
+		return false		
+	end
+end
+
+local function GetVehicle(Vehicle)
+	if table.find(Main["Vehicles"], Vehicle) then
+		game:GetService("ReplicatedStorage").ServerStats.BuyVehicle:FireServer(Vehicle)
+		return true
+	else
+		return false		
+	end
+end
+
+local function ClaimCondo(Condo)
+	game:GetService("ReplicatedStorage").AptStats.Remotes.GetRoom:FireServer(Condo)
+end
+
+local function KickPlayersOutOfCondo(Condo)
+	game:GetService("ReplicatedStorage").AptStats.Remotes.KickRequest:FireServer(Condo)
+end
+
+local function BoostRating(Player)
+	game:GetService("ReplicatedStorage").ServerStats.RateCondo:FireServer(99999999, Player)
+end
+
+local function DestroyRating(Player)
+	game:GetService("ReplicatedStorage").ServerStats.RateCondo:FireServer(-99999999, Player)
+end
+
+local function SpawnGamepassVehicle(Vehicle)
+	if Vehicle == "Heli" or Vehicle == "Seminole" or Vehicle == "Monotracer" then
+		game:GetService("ReplicatedStorage").ServerStats.SpawnVehicle:FireServer(Vehicle)		
+		return true
+	else
+		return false
+	end
+end
+
+local function ClearFurniture()
+	for i,v in pairs(game:GetService("ReplicatedStorage").PlayerStats:GetChildren()) do
+		if v.Name ~= game:GetService("Players").LocalPlayer.Name then
+			game:GetService("ReplicatedStorage").AptStats.Remotes.RemoveItem:FireServer(v.PlacedItems.ID.Value)
+		end
+	end
+end
+
+local function BreakItemPlacing()
+	for i,v in pairs(game:GetService("ReplicatedStorage").AptStats.Items:GetChildren()) do
+		if v:FindFirstChild("Stats") then
+			game:GetService("ReplicatedStorage").AptStats.Remotes.RemoveItem:FireServer(v.Stats.ID.Value)
+		end
+	end
+end
+
+local function LagServer()
+	FastSpawn(function()
+		while wait() do
+			GetItem("Rose Bed")
+			wait()		
+			game:GetService("ReplicatedStorage").AptStats.Remotes.PlaceItem:FireServer(os.time(), "Rose Bed", Vector3.new(-2, 1.5, -0.5), Vector3.new(0, 0, 0))
+		end
+	end)
+end
+
+local function SpamChat(Message)
+	FastSpawn(function()
+		while wait() do
+			game:GetService("ReplicatedStorage").ServerStats.CustomChat.ChattedIn:FireServer(Message)			
+		end
+	end)
+end
+
+local function ClaimAllVacantCondos()
+	local VacantCondos = game:GetService("ReplicatedStorage").ServerStats.GetVacant:InvokeServer()
+	for i,v in pairs(VacantCondos) do
+		ClaimCondo(tostring(v))
+	end
+end
+
+local function GetAllColors()
+	for i,v in pairs(Main["Colors"]) do
+		GetColor(v)
+	end
+end
+
+local function GetAllMaterials()
+	for i,v in pairs(Main["Materials"]) do
+		GetMaterial(v)
+	end
+end
+
+local function GetAllVehicles()
+	for i,v in pairs(Main["Vehicles"]) do
+		GetVehicle(v)
+	end
+end
+
+local function GetAllPets()
+	for i,v in pairs(Main["Pets"]) do
+		GetPet(v)
+	end
+end
+
+local function GetAllItems()
+	for i,v in pairs(Main["Items"]) do
+		GetItem(v)
+	end
+end
+
+local function GetInfiniteMoney()
+	game.ReplicatedStorage.ServerStats.ChangeMoney:FireServer(500000000000, math.floor(math.sqrt(game.ReplicatedStorage.ServerStats.CurrentID.Value)) + 1337)
+end
+
+local Flux = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/fluxlib.txt")()
+local Window = Flux:Window("THE PLAZA", "Made by Pylogon", Color3.fromRGB(255, 135, 15), Enum.KeyCode.LeftControl)
+local Tab = Window:Tab("Main", "http://www.roblox.com/asset/?id=6023426915")
+Tab:Button("Clear All Furniture", "This function will remove all player's furniture [Except yours]", function()
+	ClearFurniture()
+	Flux:Notification("Cleared all furniture!", "Alright")
+end)
+Tab:Button("Lag Server", "This function will lag the server", function()
+	LagServer()
+	Flux:Notification("Lagging server!", "Alright")
+end)
+Tab:Button("Get All Colors", "This function will give you all the colors", function()
+	GetAllColors()
+	Flux:Notification("Gave you all the colors!", "Alright")
+end)
+Tab:Button("Get All Items", "This function will give you all the items", function()
+	GetAllItems()
+	Flux:Notification("Gave you all the items!", "Alright")
+end)
+Tab:Button("Get All Materials", "This function will give you all the materials", function()
+	GetAllMaterials()
+	Flux:Notification("Gave you all the materials!", "Alright")
+end)
+Tab:Button("Get All Vehicles", "This function will give you all the vehicles", function()
+	GetAllVehicles()
+	Flux:Notification("Gave you all the vehicles!", "Alright")
+end)
+Tab:Button("Get All Pets", "This function will give you all the pets", function()
+	GetAllPets()
+	Flux:Notification("Gave you all the pets!", "Alright")
+end)
+Tab:Button("Claim all condos", "This function will claim all vacants condos [Other players can't play]", function()
+	ClaimAllVacantCondos()
+	Flux:Notification("Claimed all vacant condos!", "Alright")
+end)
+Tab:Button("Break Item Placing", "This function will break item placing for all players", function()
+	BreakItemPlacing()
+	Flux:Notification("Broke item placing!", "Alright")
+end)
+Tab:Textbox("Spam Chat", "This function will spam chat making it unable to talk to other players", true, function(Text)
+	SpamChat(Text)
+	Flux:Notification("Spamming chat!", "Alright")
+end)
+Tab:Textbox("Kick Players From Condo", "This function will kick all players from a condo", true, function(Text)
+	KickPlayersOutOfCondo(Text)
+	Flux:Notification("Kicked player's from condo!", "Alright")
+end)
+Tab:Textbox("Destroy Condo Rating", "This function will put someone's rating into the negatives", true, function(Text)
+	DestroyRating(Text)
+	Flux:Notification("Destroyed condo's rating!", "Alright")
+end)
+Tab:Textbox("Boost Condo Rating", "This function will put someone's rating into impossible positives", true, function(Text)
+	BoostRating(Text)
+	Flux:Notification("Boosted condo's rating!", "Alright")
+end)
+Tab:Dropdown("Spawn Gamepass Vehicle", {"Heli", "Seminole", "Monotracer"}, function(Option)
+	SpawnGamepassVehicle(Option)
+end)
