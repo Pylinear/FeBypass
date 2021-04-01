@@ -1,0 +1,77 @@
+local GameMetaTable = getrawmetatable(Game)
+
+local ExploitFunctions = {
+    checkcaller = checkcaller,
+    getrawmetatable = getrawmetatable or getlockedmetatable,
+    newcclosure = newcclosure,
+    getnamecallmethod = getnamecallmethod or get_namecall_method,
+    setreadonly = setreadonly or (make_writeable and function(table, readonly)
+        if readonly then
+            make_readonly(table)
+        else
+            make_writeable(table)
+        end
+    end)
+}
+
+ExploitFunctions.setreadonly(GameMetaTable, false)
+
+local OldGameMetaTableFunctions = {
+    __index = GameMetaTable.__index,
+    __namecall = GameMetaTable.__namecall
+}
+
+local MTAPI = {}
+
+-->> External Functions
+function MTAPI.SpoofValue(Instance, Property, Value)
+   GameMetaTable.__index = ExploitFunctions.newcclosure(function(self, key)
+       if self == Instance and key == Property then
+           return Value
+       end
+       return OldGameMetaTableFunctions.__index(self, key)
+   end)
+   OldGameMetaTableFunctions.__index = GameMetaTable.__index
+end
+
+function MTAPI.SpoofMethod(Method, Yield, Function)
+   GameMetaTable.__namecall = ExploitFunctions.newcclosure(function()
+        if ExploitFunctions.getnamecallmethod == Method then
+            if Yield == true then
+                return wait(9e9)
+            elseif Function and type(Function) == "function" then
+                return Function
+            end
+            return
+        end
+        return OldGameMetaTableFunctions.__namecall(self, key)
+   end)
+   OldGameMetaTableFunctions.__namecall = GameMetaTable.__namecall
+end
+
+function MTAPI.HideInstance(Instance)
+    GameMetaTable.__index = ExploitFunctions.newcclosure(function(self, key)
+        if not checkcaller() and self == Instance then
+           return 
+        end
+        return OldGameMetaTableFunctions.__index(self, key)
+     end)
+     OldGameMetaTableFunctions.__index = GameMetaTable.__index
+end
+
+function MTAPI.LockProperty(Instance, Property, AllPropertiesWithSameName)
+    GameMetaTable.__index = ExploitFunctions.newcclosure(function(self, key)
+         if AllPropertiesWithSameName == true then
+            if key == Property then
+                return {Value, Value2, Value3}
+            end
+        elseif self == Instance and key == Property then
+            return {Value, Value2, Value3}
+        end
+        return OldGameMetaTableFunctions.__index(self, key)
+    end)
+    OldGameMetaTableFunctions.__index == GameMetaTable.__index
+end
+
+return MTAPI
+
